@@ -50,7 +50,7 @@ const About = ({ onBack }) => {
                 Le <strong>calcul d'impôt sur le revenu</strong> reste complexe pour de nombreux Français. 
                 Entre les barèmes fiscaux qui évoluent chaque année, les déductions professionnelles, 
                 le quotient familial et les différents revenus, il devient difficile d'estimer son 
-                <strong> impôt 2025</strong> ou de planifier ses finances personnelles.
+                <strong> impôt </strong> ou de planifier ses finances personnelles.
               </p>
 
               <p className="text-gray-700 leading-relaxed mb-6">
