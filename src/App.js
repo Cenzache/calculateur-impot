@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { User, Calculator, CheckCircle, FileText } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { User, Calculator, CheckCircle, FileText, Info } from 'lucide-react';
+import About from './About';
 
 const TaxEstimator = () => {
+  const [currentView, setCurrentView] = useState('calculator'); // 'calculator' ou 'about'
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedYear, setSelectedYear] = useState(2025);
   const [manualData, setManualData] = useState({
@@ -15,6 +17,11 @@ const TaxEstimator = () => {
     realCosts: '',
     rentalIncome: ''
   });
+
+  // Si on est sur la page About, l'afficher
+  if (currentView === 'about') {
+    return <About onBack={() => setCurrentView('calculator')} />;
+  }
 
   // Barèmes d'imposition par année
   const taxBracketsByYear = {
@@ -128,10 +135,19 @@ const TaxEstimator = () => {
       {/* Header avec pub discrète */}
       <div className="w-full">
         <div className="bg-gray-50 border-b border-gray-200 py-2">
-          <div className="max-w-4xl mx-auto px-4 flex justify-center">
-            <div className="w-[728px] h-[90px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
-              Publicité
+          <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
+            <div className="flex justify-center flex-1">
+              <div className="w-[728px] h-[90px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
+                Publicité
+              </div>
             </div>
+            <button
+              onClick={() => setCurrentView('about')}
+              className="flex items-center text-gray-600 hover:text-black transition-colors ml-4"
+            >
+              <Info className="w-4 h-4 mr-1" />
+              À propos
+            </button>
           </div>
         </div>
       </div>
@@ -516,7 +532,7 @@ const TaxEstimator = () => {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-xs text-gray-500">
             © 2025 Calculateur-Impot.fr • Estimation indicative • 
-            <a href="#" className="hover:text-gray-700 ml-1">Mentions légales</a> • 
+            <a href="#" onClick={() => setCurrentView('about')} className="hover:text-gray-700 ml-1">À propos</a> • 
             <a href="#" className="hover:text-gray-700 ml-1">Contact</a>
           </p>
         </div>
