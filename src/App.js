@@ -18,11 +18,6 @@ const TaxEstimator = () => {
     rentalIncome: ''
   });
 
-  // Si on est sur la page About, l'afficher
-  if (currentView === 'about') {
-    return <About onBack={() => setCurrentView('calculator')} />;
-  }
-
   // Barèmes d'imposition par année
   const taxBracketsByYear = {
     2024: [
@@ -111,6 +106,11 @@ const TaxEstimator = () => {
       rentalIncome: Math.round(rentalIncome)
     };
   }, [manualData, profile, selectedYear, taxBrackets, deductionLimits]);
+
+  // Si on est sur la page About, l'afficher
+  if (currentView === 'about') {
+    return <About onBack={() => setCurrentView('calculator')} />;
+  }
 
   const handleManualSubmit = () => {
     if (!manualData.netAnnualSalary) return;
