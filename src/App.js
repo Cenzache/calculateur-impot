@@ -16,18 +16,6 @@ const TaxEstimator = () => {
     rentalIncome: ''
   });
 
-  // Google AdSense setup
-  useEffect(() => {
-    // Script AdSense sera ajouté ici après validation du compte
-    if (typeof window !== 'undefined') {
-      // Futur script AdSense
-      // const script = document.createElement('script');
-      // script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-VOTRE_ID";
-      // script.async = true;
-      // document.head.appendChild(script);
-    }
-  }, []);
-
   // Barèmes d'imposition par année
   const taxBracketsByYear = {
     2024: [
@@ -524,3 +512,17 @@ const TaxEstimator = () => {
       </div>
 
       {/* Footer avec mentions légales */}
+      <footer className="bg-gray-50 border-t border-gray-200 py-6">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <p className="text-xs text-gray-500">
+            © 2025 Calculateur-Impot.fr • Estimation indicative • 
+            <a href="#" className="hover:text-gray-700 ml-1">Mentions légales</a> • 
+            <a href="#" className="hover:text-gray-700 ml-1">Contact</a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default TaxEstimator;
