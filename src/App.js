@@ -5,7 +5,7 @@ import About from './About';
 const TaxEstimator = () => {
   const [currentView, setCurrentView] = useState('calculator'); // 'calculator' ou 'about'
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedYear, setSelectedYear] = useState(2026);
   const [manualData, setManualData] = useState({
     netAnnualSalary: '',
     currentTaxWithholding: ''
@@ -18,28 +18,36 @@ const TaxEstimator = () => {
     rentalIncome: ''
   });
 
-  // Barèmes d'imposition par année
+  // Barèmes d'imposition par année d'avis (logique corrigée : l'avis utilise le barème de l'année de l'avis)
   const taxBracketsByYear = {
-    2024: [
-      { min: 0, max: 11085, rate: 0 },
-      { min: 11085, max: 28151, rate: 0.11 },
-      { min: 28151, max: 80725, rate: 0.30 },
-      { min: 80725, max: 174065, rate: 0.41 },
-      { min: 174065, max: Infinity, rate: 0.45 }
-    ],
-    2025: [
+    2024: [ // Avis 2024 - barème 2024 (revenus 2023)
       { min: 0, max: 11294, rate: 0 },
       { min: 11294, max: 28797, rate: 0.11 },
       { min: 28797, max: 82341, rate: 0.30 },
       { min: 82341, max: 177106, rate: 0.41 },
       { min: 177106, max: Infinity, rate: 0.45 }
+    ],
+    2025: [ // Avis 2025 - barème 2025 (revenus 2024)
+      { min: 0, max: 11497, rate: 0 },
+      { min: 11497, max: 29315, rate: 0.11 },
+      { min: 29315, max: 83823, rate: 0.30 },
+      { min: 83823, max: 180294, rate: 0.41 },
+      { min: 180294, max: Infinity, rate: 0.45 }
+    ],
+    2026: [ // Avis 2026 - barème 2026 (revenus 2025) - projection
+      { min: 0, max: 11700, rate: 0 },
+      { min: 11700, max: 29850, rate: 0.11 },
+      { min: 29850, max: 85300, rate: 0.30 },
+      { min: 85300, max: 183500, rate: 0.41 },
+      { min: 183500, max: Infinity, rate: 0.45 }
     ]
   };
 
   // Déductions forfaitaires par année
   const deductionLimitsByYear = {
     2024: { min: 460, max: 13267 },
-    2025: { min: 464, max: 13522 }
+    2025: { min: 464, max: 13522 },
+    2026: { min: 472, max: 13779 } // estimation
   };
 
   const taxBrackets = taxBracketsByYear[selectedYear];
@@ -90,12 +98,33 @@ const TaxEstimator = () => {
       }
     }
     
-    const totalTax = Math.max(0, taxBeforeFamily * familyShares);
+    let totalTax = Math.max(0, taxBeforeFamily * familyShares);
+    
+    // Application de la décote automatique (paramètres officiels Bercy)
+    const decoteData = {
+      2024: { seuil_celibataire: 1841, seuil_couple: 3045, base_celibataire: 828, base_couple: 1368, taux: 0.4523 },
+      2025: { seuil_celibataire: 1929, seuil_couple: 3186, base_celibataire: 873, base_couple: 1444, taux: 0.4523 },
+      2026: { seuil_celibataire: 1964, seuil_couple: 3249, base_celibataire: 889, base_couple: 1470, taux: 0.4525 }
+    };
+    
+    const decoteParams = decoteData[selectedYear];
+    const isCouple = profile.familySituation === 'married';
+    const decoteLimit = isCouple ? decoteParams.seuil_couple : decoteParams.seuil_celibataire;
+    const decoteBase = isCouple ? decoteParams.base_couple : decoteParams.base_celibataire;
+    
+    let decote = 0;
+    if (totalTax <= decoteLimit && totalTax > 0) {
+      decote = Math.max(0, decoteBase - (decoteParams.taux * totalTax));
+      totalTax = Math.max(0, totalTax - decote);
+    }
+    
     const monthlyTax = totalTax / 12;
     const effectiveRate = taxableIncome > 0 ? (totalTax / taxableIncome) * 100 : 0;
     
     return {
       totalTax: Math.round(totalTax),
+      totalTaxBeforeDecote: Math.round(taxBeforeFamily * familyShares),
+      decote: Math.round(decote),
       monthlyTax: Math.round(monthlyTax),
       effectiveRate: Math.round(effectiveRate * 10) / 10,
       currentWithholding: data.currentTaxWithholding,
@@ -103,7 +132,8 @@ const TaxEstimator = () => {
       taxableIncome: Math.round(taxableIncome),
       deductionAmount: Math.round(deductionAmount),
       netAnnualSalary: Math.round(netAnnualSalary),
-      rentalIncome: Math.round(rentalIncome)
+      rentalIncome: Math.round(rentalIncome),
+      familyShares: familyShares
     };
   }, [manualData, profile, selectedYear, taxBrackets, deductionLimits]);
 
@@ -132,13 +162,18 @@ const TaxEstimator = () => {
       className="min-h-screen bg-white flex flex-col"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif' }}
     >
-      {/* Header avec pub discrète */}
+      {/* Header avec pub responsive */}
       <div className="w-full">
         <div className="bg-gray-50 border-b border-gray-200 py-2">
           <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
             <div className="flex justify-center flex-1">
-              <div className="w-[728px] h-[90px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
-                Publicité
+              {/* Pub desktop */}
+              <div className="hidden md:block w-[728px] h-[90px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
+                Publicité (728x90)
+              </div>
+              {/* Pub mobile */}
+              <div className="block md:hidden w-[320px] h-[50px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
+                Publicité (320x50)
               </div>
             </div>
             <button
@@ -153,26 +188,26 @@ const TaxEstimator = () => {
       </div>
 
       {/* Contenu principal */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-4xl">
           {/* Progress indicator */}
-          <div className="flex justify-center mb-12">
-            <div className="flex items-center space-x-4">
+          <div className="flex justify-center mb-8 md:mb-12">
+            <div className="flex items-center space-x-2 md:space-x-4">
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-medium ${
                     (currentStep === 'manual' && step === 1) || (typeof currentStep === 'number' && currentStep >= step)
                       ? 'bg-black text-white' 
                       : 'bg-gray-200 text-gray-400'
                   }`}>
                     {((currentStep === 'manual' && step === 1) || (typeof currentStep === 'number' && currentStep > step)) ? (
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-3 h-3 md:w-4 md:h-4" />
                     ) : (
                       step
                     )}
                   </div>
                   {step < 3 && (
-                    <div className={`w-12 h-0.5 mx-2 ${
+                    <div className={`w-8 md:w-12 h-0.5 mx-1 md:mx-2 ${
                       (typeof currentStep === 'number' && currentStep > step) ? 'bg-black' : 'bg-gray-200'
                     }`} />
                   )}
@@ -184,9 +219,9 @@ const TaxEstimator = () => {
           {/* Step content */}
           <div className="min-h-[400px] flex items-center justify-center">
             {currentStep === 1 && (
-              <div className="text-center space-y-8">
+              <div className="text-center space-y-6 md:space-y-8 px-4">
                 <div className="space-y-4">
-                  <h1 className="text-3xl font-normal text-black">
+                  <h1 className="text-2xl md:text-3xl font-normal text-black">
                     Calculateur d'impôt sur le revenu
                   </h1>
                   
@@ -195,28 +230,44 @@ const TaxEstimator = () => {
                     <div className="flex bg-gray-100 rounded-lg p-1">
                       <button
                         onClick={() => setSelectedYear(2024)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
                           selectedYear === 2024 
                             ? 'bg-black text-white' 
                             : 'text-gray-600 hover:text-black'
                         }`}
                       >
-                        Impôts 2024
+                        Avis 2024
                       </button>
                       <button
                         onClick={() => setSelectedYear(2025)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
                           selectedYear === 2025 
                             ? 'bg-black text-white' 
                             : 'text-gray-600 hover:text-black'
                         }`}
                       >
-                        Impôts 2025
+                        Avis 2025
+                      </button>
+                      <button
+                        onClick={() => setSelectedYear(2026)}
+                        className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
+                          selectedYear === 2026 
+                            ? 'bg-black text-white' 
+                            : 'text-gray-600 hover:text-black'
+                        }`}
+                      >
+                        Avis 2026
                       </button>
                     </div>
                   </div>
                   
-                  <p className="text-gray-600 max-w-md mx-auto">
+                  <p className="text-center text-sm text-gray-500">
+                    {selectedYear === 2024 && "Revenus 2023 • Barème 2024"}
+                    {selectedYear === 2025 && "Revenus 2024 • Barème 2025"}
+                    {selectedYear === 2026 && "Revenus 2025 • Barème 2026 (projection)"}
+                  </p>
+                  
+                  <p className="text-gray-600 max-w-md mx-auto text-sm md:text-base">
                     Estimez rapidement votre impôt {selectedYear} en quelques clics
                   </p>
                 </div>
@@ -224,14 +275,14 @@ const TaxEstimator = () => {
                 <div className="max-w-md mx-auto">
                   <button
                     onClick={() => setCurrentStep('manual')}
-                    className="w-full bg-black hover:bg-gray-800 transition-colors text-white rounded-lg p-8 flex flex-col items-center space-y-4"
+                    className="w-full bg-black hover:bg-gray-800 transition-colors text-white rounded-lg p-6 md:p-8 flex flex-col items-center space-y-4"
                   >
-                    <FileText className="w-10 h-10" />
+                    <FileText className="w-8 h-8 md:w-10 md:h-10" />
                     <div className="space-y-2">
-                      <div className="text-lg font-medium">
+                      <div className="text-base md:text-lg font-medium">
                         Commencer l'estimation
                       </div>
-                      <div className="text-sm opacity-90">
+                      <div className="text-xs md:text-sm opacity-90">
                         Saisie rapide • Calcul immédiat
                       </div>
                     </div>
@@ -245,9 +296,9 @@ const TaxEstimator = () => {
             )}
 
             {currentStep === 'manual' && (
-              <div className="max-w-md mx-auto space-y-8">
+              <div className="max-w-md mx-auto space-y-6 md:space-y-8 px-4">
                 <div className="text-center space-y-4">
-                  <h2 className="text-2xl font-normal text-black">
+                  <h2 className="text-xl md:text-2xl font-normal text-black">
                     Saisie de vos revenus
                   </h2>
                   <p className="text-sm text-gray-600">
@@ -305,13 +356,13 @@ const TaxEstimator = () => {
             )}
 
             {currentStep === 2 && (
-              <div className="max-w-md mx-auto space-y-8">
+              <div className="max-w-md mx-auto space-y-6 md:space-y-8 px-4">
                 <div className="text-center space-y-4">
                   <div className="flex items-center justify-center space-x-2 text-green-600">
                     <CheckCircle className="w-5 h-5" />
                     <span className="text-sm">Données saisies</span>
                   </div>
-                  <h2 className="text-2xl font-normal text-black">
+                  <h2 className="text-xl md:text-2xl font-normal text-black">
                     Informations complémentaires
                   </h2>
                 </div>
@@ -443,17 +494,22 @@ const TaxEstimator = () => {
             )}
 
             {currentStep === 3 && (
-              <div className="max-w-2xl mx-auto space-y-8">
-                {/* Zone pub avant les résultats */}
+              <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 px-4">
+                {/* Zone pub avant les résultats - responsive */}
                 <div className="flex justify-center">
-                  <div className="w-[336px] h-[280px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
-                    Publicité
+                  {/* Pub desktop */}
+                  <div className="hidden md:block w-[336px] h-[280px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
+                    Publicité (336x280)
+                  </div>
+                  {/* Pub mobile */}
+                  <div className="block md:hidden w-[300px] h-[250px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
+                    Publicité (300x250)
                   </div>
                 </div>
 
                 <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-normal text-black">
-                    Votre estimation d'impôt {selectedYear}
+                  <h2 className="text-xl md:text-2xl font-normal text-black">
+                    Votre estimation d'impôt pour l'avis {selectedYear}
                   </h2>
                   <p className="text-sm text-gray-600">
                     Salaires : {calculateTax?.netAnnualSalary.toLocaleString('fr-FR')}€
@@ -466,19 +522,19 @@ const TaxEstimator = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-black mb-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4 md:p-6 text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-black mb-2">
                       {calculateTax?.totalTax.toLocaleString('fr-FR')}€
                     </div>
-                    <div className="text-sm text-black font-medium">Impôt annuel estimé</div>
+                    <div className="text-sm text-black font-medium">Impôt annuel final</div>
                     <div className="text-xs text-gray-600 mt-1">
                       Taux effectif : {calculateTax?.effectiveRate}%
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-black mb-2">
+                  <div className="bg-gray-50 rounded-lg p-4 md:p-6 text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-black mb-2">
                       {calculateTax?.monthlyTax.toLocaleString('fr-FR')}€
                     </div>
                     <div className="text-sm text-black font-medium">Prélèvement mensuel</div>
@@ -488,12 +544,27 @@ const TaxEstimator = () => {
                   </div>
                 </div>
 
+                {/* Détails du calcul */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="text-sm font-medium text-blue-900 mb-2">
+                    Détail du calcul
+                  </div>
+                  <div className="text-xs text-blue-700 space-y-1">
+                    <div>Parts fiscales : <strong>{calculateTax?.familyShares}</strong></div>
+                    <div>Impôt avant décote : <strong>{calculateTax?.totalTaxBeforeDecote.toLocaleString('fr-FR')}€</strong></div>
+                    {calculateTax?.decote > 0 && (
+                      <div className="text-green-600">Décote appliquée : <strong>-{calculateTax?.decote.toLocaleString('fr-FR')}€</strong></div>
+                    )}
+                    <div>Déduction professionnelle : <strong>{calculateTax?.deductionAmount.toLocaleString('fr-FR')}€</strong></div>
+                  </div>
+                </div>
+
                 {calculateTax?.currentWithholding > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="text-sm font-medium text-blue-900 mb-2">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="text-sm font-medium text-yellow-800 mb-2">
                       Comparaison avec votre prélèvement actuel
                     </div>
-                    <div className="text-xs text-blue-700">
+                    <div className="text-xs text-yellow-700">
                       Prélèvement actuel : {calculateTax.currentWithholding.toLocaleString('fr-FR')}€/an
                       <br />
                       Différence : {calculateTax.difference > 0 ? '+' : ''}{calculateTax.difference.toLocaleString('fr-FR')}€
@@ -501,6 +572,44 @@ const TaxEstimator = () => {
                     </div>
                   </div>
                 )}
+
+                <div className="bg-gray-100 p-4 rounded-lg text-xs text-gray-600">
+                  Cette estimation est indicative et basée sur les barèmes fiscaux officiels. 
+                  Elle ne remplace pas un calcul officiel.
+                  <br /><br />
+                  <strong>⚠️ Non pris en compte :</strong> revenus étrangers soumis au taux effectif, 
+                  réductions d'impôt spécifiques, crédits d'impôt, situations particulières.
+                </div>
+
+                {/* Liens utiles */}
+                <div className="bg-white border border-gray-200 p-4 rounded-lg">
+                  <h3 className="text-sm font-semibold mb-3 text-gray-900">Outils officiels complémentaires</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <a 
+                        href="https://www.impots.gouv.fr/simulateurs" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                      >
+                        🏛️ Simulateurs officiels impots.gouv.fr
+                      </a>
+                      <p className="text-xs text-gray-500 mt-1">Calculs officiels avec toutes les spécificités</p>
+                    </div>
+                    
+                    <div>
+                      <a 
+                        href="https://mon-entreprise.urssaf.fr/simulateurs-et-assistants" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                      >
+                        💼 Simulateurs Urssaf (salaire, cotisations)
+                      </a>
+                      <p className="text-xs text-gray-500 mt-1">Calculs net/brut, charges sociales</p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
@@ -516,11 +625,6 @@ const TaxEstimator = () => {
                     Imprimer le résultat
                   </button>
                 </div>
-
-                <div className="text-xs text-gray-500 text-center bg-gray-50 p-4 rounded-lg">
-                  Cette estimation est indicative et basée sur les barèmes fiscaux {selectedYear}. 
-                  Elle ne remplace pas un calcul officiel et ne tient pas compte de situations particulières.
-                </div>
               </div>
             )}
           </div>
@@ -532,7 +636,12 @@ const TaxEstimator = () => {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-xs text-gray-500">
             © 2025 Calculateur-Impot.fr • Estimation indicative • 
-            <a href="#" onClick={() => setCurrentView('about')} className="hover:text-gray-700 ml-1">À propos</a> • 
+            <button 
+              onClick={() => setCurrentView('about')} 
+              className="hover:text-gray-700 ml-1 underline"
+            >
+              À propos
+            </button> • 
             <a href="#" className="hover:text-gray-700 ml-1">Contact</a>
           </p>
         </div>
