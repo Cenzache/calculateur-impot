@@ -1,5 +1,4 @@
 import { Analytics } from '@vercel/analytics/react';
-import About from './About';
 import React, { useState, useMemo } from 'react';
 import { Calculator, User, FileText, Info } from 'lucide-react';
 import About from './About';
