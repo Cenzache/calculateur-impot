@@ -4,7 +4,7 @@ import { Calculator, User, FileText, Info } from 'lucide-react';
 import About from './About';
 
 const TaxEstimator = () => {
-  const [currentView, setCurrentView] = useState('calculator'); // 'calculator' ou 'about'
+  const [currentView, setCurrentView] = useState('calculator');
   const [selectedYear, setSelectedYear] = useState(2026);
   const [salary, setSalary] = useState('');
   const [currentTax, setCurrentTax] = useState('');
@@ -14,23 +14,23 @@ const TaxEstimator = () => {
   const [realCosts, setRealCosts] = useState('');
   const [rentalIncome, setRentalIncome] = useState('');
 
-  // Barèmes d'imposition par année d'avis (logique corrigée : avis utilise barème de l'année d'avis)
+  // Barèmes d'imposition par année
   const taxBracketsByYear = {
-    2024: [ // Avis 2024 - barème 2024 (revenus 2023)
+    2024: [
       { min: 0, max: 11294, rate: 0 },
       { min: 11294, max: 28797, rate: 0.11 },
       { min: 28797, max: 82341, rate: 0.30 },
       { min: 82341, max: 177106, rate: 0.41 },
       { min: 177106, max: Infinity, rate: 0.45 }
     ],
-    2025: [ // Avis 2025 - barème 2025 (revenus 2024)
+    2025: [
       { min: 0, max: 11497, rate: 0 },
       { min: 11497, max: 29315, rate: 0.11 },
       { min: 29315, max: 83823, rate: 0.30 },
       { min: 83823, max: 180294, rate: 0.41 },
       { min: 180294, max: Infinity, rate: 0.45 }
     ],
-    2026: [ // Avis 2026 - barème 2026 (revenus 2025) - projection
+    2026: [
       { min: 0, max: 11700, rate: 0 },
       { min: 11700, max: 29850, rate: 0.11 },
       { min: 29850, max: 85300, rate: 0.30 },
@@ -43,14 +43,42 @@ const TaxEstimator = () => {
   const deductionLimitsByYear = {
     2024: { min: 460, max: 13267 },
     2025: { min: 464, max: 13522 },
-    2026: { min: 472, max: 13779 } // estimation
+    2026: { min: 472, max: 13779 }
   };
 
   const taxBrackets = taxBracketsByYear[selectedYear];
   const deductionLimits = deductionLimitsByYear[selectedYear];
 
+  // Validation des entrées
+  const validateInputs = () => {
+    const salaryNum = parseFloat(salary);
+    if (salary && (isNaN(salaryNum) || salaryNum < 0)) {
+      return "Le salaire doit être un nombre positif";
+    }
+    
+    const currentTaxNum = parseFloat(currentTax);
+    if (currentTax && (isNaN(currentTaxNum) || currentTaxNum < 0)) {
+      return "Le prélèvement actuel doit être un nombre positif";
+    }
+    
+    const rentalNum = parseFloat(rentalIncome);
+    if (rentalIncome && (isNaN(rentalNum) || rentalNum < 0)) {
+      return "Les revenus fonciers doivent être un nombre positif";
+    }
+    
+    const realCostsNum = parseFloat(realCosts);
+    if (deductionType === 'realCosts' && realCosts && (isNaN(realCostsNum) || realCostsNum < 0)) {
+      return "Les frais réels doivent être un nombre positif";
+    }
+    
+    return null;
+  };
+
   // Calcul de l'impôt
   const calculateTax = useMemo(() => {
+    const validationError = validateInputs();
+    if (validationError) return { error: validationError };
+
     const netAnnualSalary = parseFloat(salary) || 0;
     const currentTaxWithholding = parseFloat(currentTax) || 0;
     
@@ -89,7 +117,7 @@ const TaxEstimator = () => {
     
     let totalTax = Math.max(0, taxBeforeFamily * familyShares);
     
-    // Application de la décote automatique (paramètres officiels Bercy)
+    // Application de la décote automatique
     const decoteData = {
       2024: { seuil_celibataire: 1841, seuil_couple: 3045, base_celibataire: 828, base_couple: 1368, taux: 0.4523 },
       2025: { seuil_celibataire: 1929, seuil_couple: 3186, base_celibataire: 873, base_couple: 1444, taux: 0.4523 },
@@ -124,7 +152,7 @@ const TaxEstimator = () => {
       rentalIncome: Math.round(rental),
       familyShares: familyShares
     };
-  }, [salary, currentTax, familySituation, children, deductionType, realCosts, rentalIncome, selectedYear]);
+  }, [salary, currentTax, familySituation, children, deductionType, realCosts, rentalIncome, selectedYear, taxBrackets, deductionLimits]);
 
   // Si on est sur la page About, l'afficher
   if (currentView === 'about') {
@@ -153,6 +181,7 @@ const TaxEstimator = () => {
             <button
               onClick={() => setCurrentView('about')}
               className="flex items-center text-gray-600 hover:text-black transition-colors ml-4"
+              aria-label="Voir la page à propos"
             >
               <Info className="w-4 h-4 mr-1" />
               À propos
@@ -171,37 +200,23 @@ const TaxEstimator = () => {
             
             {/* Sélecteur d'année */}
             <div className="flex justify-center mb-4">
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setSelectedYear(2024)}
-                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-                    selectedYear === 2024 
-                      ? 'bg-black text-white' 
-                      : 'text-gray-600 hover:text-black'
-                  }`}
-                >
-                  Avis 2024
-                </button>
-                <button
-                  onClick={() => setSelectedYear(2025)}
-                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-                    selectedYear === 2025 
-                      ? 'bg-black text-white' 
-                      : 'text-gray-600 hover:text-black'
-                  }`}
-                >
-                  Avis 2025
-                </button>
-                <button
-                  onClick={() => setSelectedYear(2026)}
-                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-                    selectedYear === 2026 
-                      ? 'bg-black text-white' 
-                      : 'text-gray-600 hover:text-black'
-                  }`}
-                >
-                  Avis 2026
-                </button>
+              <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Sélectionner l'année fiscale">
+                {[2024, 2025, 2026].map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => setSelectedYear(year)}
+                    className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
+                      selectedYear === year 
+                        ? 'bg-black text-white' 
+                        : 'text-gray-600 hover:text-black'
+                    }`}
+                    role="tab"
+                    aria-selected={selectedYear === year}
+                    aria-controls={`year-${year}-panel`}
+                  >
+                    Avis {year}
+                  </button>
+                ))}
               </div>
             </div>
             
@@ -211,6 +226,13 @@ const TaxEstimator = () => {
               {selectedYear === 2026 && "Revenus 2025 • Barème 2026 (projection)"}
             </p>
           </div>
+
+          {/* Affichage des erreurs de validation */}
+          {calculateTax?.error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 text-sm font-medium">⚠️ {calculateTax.error}</p>
+            </div>
+          )}
 
           <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
             {/* Formulaire */}
@@ -223,41 +245,54 @@ const TaxEstimator = () => {
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Salaire net annuel (€)
+                    <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-2">
+                      Salaire net annuel (€) *
                     </label>
                     <input
+                      id="salary"
                       type="number"
                       value={salary}
                       onChange={(e) => setSalary(e.target.value)}
                       placeholder="Ex: 42000"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                      aria-describedby="salary-help"
+                      min="0"
+                      step="100"
                     />
+                    <p id="salary-help" className="text-xs text-gray-500 mt-1">
+                      Votre salaire net après déduction des cotisations sociales
+                    </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="currentTax" className="block text-sm font-medium text-gray-700 mb-2">
                       Prélèvement à la source annuel actuel (€)
                     </label>
                     <input
+                      id="currentTax"
                       type="number"
                       value={currentTax}
                       onChange={(e) => setCurrentTax(e.target.value)}
                       placeholder="Ex: 3200 (optionnel)"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                      min="0"
+                      step="10"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="rentalIncome" className="block text-sm font-medium text-gray-700 mb-2">
                       Revenus fonciers nets (€)
                     </label>
                     <input
+                      id="rentalIncome"
                       type="number"
                       value={rentalIncome}
                       onChange={(e) => setRentalIncome(e.target.value)}
                       placeholder="Ex: 12000 (optionnel)"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                      min="0"
+                      step="100"
                     />
                   </div>
                 </div>
@@ -271,10 +306,11 @@ const TaxEstimator = () => {
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="familySituation" className="block text-sm font-medium text-gray-700 mb-2">
                       Statut
                     </label>
                     <select
+                      id="familySituation"
                       value={familySituation}
                       onChange={(e) => setFamilySituation(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
@@ -285,10 +321,11 @@ const TaxEstimator = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="children" className="block text-sm font-medium text-gray-700 mb-2">
                       Nombre d'enfants à charge
                     </label>
                     <input
+                      id="children"
                       type="number"
                       value={children}
                       onChange={(e) => setChildren(Math.max(0, parseInt(e.target.value) || 0))}
@@ -298,10 +335,10 @@ const TaxEstimator = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <fieldset>
+                    <legend className="block text-sm font-medium text-gray-700 mb-2">
                       Déductions professionnelles
-                    </label>
+                    </legend>
                     <div className="space-y-2">
                       <label className="flex items-center">
                         <input
@@ -333,12 +370,15 @@ const TaxEstimator = () => {
                               onChange={(e) => setRealCosts(e.target.value)}
                               placeholder="Montant des frais réels"
                               className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                              min="0"
+                              step="10"
+                              aria-label="Montant des frais réels en euros"
                             />
                           )}
                         </div>
                       </label>
                     </div>
-                  </div>
+                  </fieldset>
                 </div>
               </div>
             </div>
@@ -347,13 +387,12 @@ const TaxEstimator = () => {
             <div className="space-y-6">
               {/* Pub avant résultats - responsive */}
               <div className="flex justify-center lg:hidden">
-                {/* Pub mobile uniquement visible sur mobile */}
                 <div className="w-[300px] h-[250px] bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-xs text-gray-500">
                   Publicité (300x250)
                 </div>
               </div>
 
-              {calculateTax && (
+              {calculateTax && !calculateTax.error && (
                 <>
                   <div className="bg-blue-50 p-4 md:p-6 rounded-lg">
                     <h2 className="text-lg font-semibold mb-4 flex items-center">
@@ -400,7 +439,9 @@ const TaxEstimator = () => {
                         <div>Prélèvement actuel : {calculateTax.currentWithholding.toLocaleString()}€/an</div>
                         <div className={`font-medium ${calculateTax.difference > 0 ? 'text-red-600' : 'text-green-600'}`}>
                           Différence : {calculateTax.difference > 0 ? '+' : ''}{calculateTax.difference.toLocaleString()}€
-                          {calculateTax.difference > 0 ? ' (complément possible)' : ' (remboursement possible)'}
+                          <span className="ml-1">
+                            {calculateTax.difference > 0 ? '(complément possible)' : '(remboursement possible)'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -453,7 +494,7 @@ const TaxEstimator = () => {
                 </>
               )}
 
-              {!calculateTax && (
+              {(!calculateTax || calculateTax.error) && (
                 <div className="bg-gray-50 p-8 rounded-lg text-center">
                   <Calculator className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-600">
@@ -481,7 +522,7 @@ const TaxEstimator = () => {
           </p>
         </div>
       </footer>
-<Analytics />
+      <Analytics />
     </div>
   );
 };
