@@ -15,6 +15,8 @@ const TaxEstimator = () => {
   const [deductionType, setDeductionType] = useState('standard10');
   const [realCosts, setRealCosts] = useState('');
   const [rentalIncome, setRentalIncome] = useState('');
+  const [microEntrepriseCA, setMicroEntrepriseCA] = useState('');
+  const [microEntrepriseType, setMicroEntrepriseType] = useState('BNC');
 
   // Barèmes d'imposition par année d'avis (logique corrigée : avis utilise barème de l'année d'avis)
   const taxBracketsByYear = {
@@ -71,13 +73,25 @@ const TaxEstimator = () => {
     const rental = parseFloat(rentalIncome) || 0;
     taxableIncome += rental;
 
+    // Calcul micro-entreprise
+    const microCA = parseFloat(microEntrepriseCA) || 0;
+    let microTaxableIncome = 0;
+    if (microCA > 0) {
+      if (microEntrepriseType === 'BNC') {
+        microTaxableIncome = microCA * 0.66; // Défraiement de 34%
+      } else if (microEntrepriseType === 'BIC') {
+        microTaxableIncome = microCA * 0.50; // Défraiement de 50%
+      }
+      taxableIncome += microTaxableIncome;
+    }
+
     // Quotient familial
     let familyShares = familySituation === 'married' ? 2 : 1;
     familyShares += children * 0.5;
     
     const quotientFamilial = taxableIncome / familyShares;
     
-    // Calcul par tranches
+    // Calcul par tranches - CORRECTION
     let taxBeforeFamily = 0;
     for (let bracket of taxBrackets) {
       if (quotientFamilial > bracket.min) {
@@ -89,6 +103,7 @@ const TaxEstimator = () => {
       }
     }
     
+    // L'impôt total = impôt par part * nombre de parts
     let totalTax = Math.max(0, taxBeforeFamily * familyShares);
     
     // Application de la décote automatique (paramètres officiels Bercy)
@@ -124,9 +139,11 @@ const TaxEstimator = () => {
       deductionAmount: Math.round(deductionAmount),
       netAnnualSalary: Math.round(netAnnualSalary),
       rentalIncome: Math.round(rental),
+      microEntrepriseCA: Math.round(microCA),
+      microTaxableIncome: Math.round(microTaxableIncome),
       familyShares: familyShares
     };
-  }, [salary, currentTax, familySituation, children, deductionType, realCosts, rentalIncome, selectedYear]);
+  }, [salary, currentTax, familySituation, children, deductionType, realCosts, rentalIncome, microEntrepriseCA, microEntrepriseType, selectedYear]);
 
   // Navigation entre les pages
   if (currentView === 'about') {
@@ -247,15 +264,46 @@ const TaxEstimator = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Prélèvement à la source annuel actuel (€)
+                      Micro-entreprise - Chiffre d'affaires annuel (€)
                     </label>
                     <input
                       type="number"
-                      value={currentTax}
-                      onChange={(e) => setCurrentTax(e.target.value)}
-                      placeholder="Ex: 3200 (optionnel)"
+                      value={microEntrepriseCA}
+                      onChange={(e) => setMicroEntrepriseCA(e.target.value)}
+                      placeholder="Ex: 25000 (optionnel)"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                     />
+                    {microEntrepriseCA && (
+                      <div className="mt-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Type d'activité
+                        </label>
+                        <div className="flex space-x-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="microType"
+                              value="BNC"
+                              checked={microEntrepriseType === 'BNC'}
+                              onChange={(e) => setMicroEntrepriseType(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">BNC (services - défraiement 34%)</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="microType"
+                              value="BIC"
+                              checked={microEntrepriseType === 'BIC'}
+                              onChange={(e) => setMicroEntrepriseType(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">BIC (vente - défraiement 50%)</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -267,6 +315,19 @@ const TaxEstimator = () => {
                       value={rentalIncome}
                       onChange={(e) => setRentalIncome(e.target.value)}
                       placeholder="Ex: 12000 (optionnel)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prélèvement à la source annuel actuel (€)
+                    </label>
+                    <input
+                      type="number"
+                      value={currentTax}
+                      onChange={(e) => setCurrentTax(e.target.value)}
+                      placeholder="Ex: 3200 (optionnel)"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                     />
                   </div>
@@ -389,14 +450,17 @@ const TaxEstimator = () => {
                       </div>
 
                       <div className="text-sm text-gray-700 space-y-1">
-                        <div>Base imposable : <strong>{calculateTax.taxableIncome.toLocaleString()}€</strong></div>
                         <div>Parts fiscales : <strong>{calculateTax.familyShares}</strong></div>
+                        <div>Déduction professionnelle : <strong>{calculateTax.deductionAmount.toLocaleString()}€</strong></div>
+                        {calculateTax.microEntrepriseCA > 0 && (
+                          <div>Micro-entreprise imposable : <strong>{calculateTax.microTaxableIncome.toLocaleString()}€</strong></div>
+                        )}
+                        <div>Base imposable : <strong>{calculateTax.taxableIncome.toLocaleString()}€</strong></div>
                         <div>Impôt avant décote : <strong>{calculateTax.totalTaxBeforeDecote.toLocaleString()}€</strong></div>
                         {calculateTax.decote > 0 && (
                           <div className="text-green-600">Décote appliquée : <strong>-{calculateTax.decote.toLocaleString()}€</strong></div>
                         )}
                         <div>Taux effectif : <strong>{calculateTax.effectiveRate}%</strong></div>
-                        <div>Déduction professionnelle : <strong>{calculateTax.deductionAmount.toLocaleString()}€</strong></div>
                       </div>
                     </div>
                   </div>
