@@ -18,8 +18,36 @@ const TaxEstimator = () => {
   const [microEntrepriseCA, setMicroEntrepriseCA] = useState('');
   const [microEntrepriseType, setMicroEntrepriseType] = useState('BNC');
 
-  // Barèmes d'imposition par année d'avis (logique corrigée : avis utilise barème de l'année d'avis)
+  // Barèmes d'imposition par année d'avis
   const taxBracketsByYear = {
+    2020: [ // Avis 2020 - barème 2020 (revenus 2019)
+      { min: 0, max: 10064, rate: 0 },
+      { min: 10064, max: 25659, rate: 0.11 },
+      { min: 25659, max: 73369, rate: 0.30 },
+      { min: 73369, max: 157806, rate: 0.41 },
+      { min: 157806, max: Infinity, rate: 0.45 }
+    ],
+    2021: [ // Avis 2021 - barème 2021 (revenus 2020)
+      { min: 0, max: 10084, rate: 0 },
+      { min: 10084, max: 25710, rate: 0.11 },
+      { min: 25710, max: 73516, rate: 0.30 },
+      { min: 73516, max: 158122, rate: 0.41 },
+      { min: 158122, max: Infinity, rate: 0.45 }
+    ],
+    2022: [ // Avis 2022 - barème 2022 (revenus 2021)
+      { min: 0, max: 10225, rate: 0 },
+      { min: 10225, max: 26070, rate: 0.11 },
+      { min: 26070, max: 74517, rate: 0.30 },
+      { min: 74517, max: 160336, rate: 0.41 },
+      { min: 160336, max: Infinity, rate: 0.45 }
+    ],
+    2023: [ // Avis 2023 - barème 2023 (revenus 2022)
+      { min: 0, max: 10777, rate: 0 },
+      { min: 10777, max: 27478, rate: 0.11 },
+      { min: 27478, max: 78570, rate: 0.30 },
+      { min: 78570, max: 168994, rate: 0.41 },
+      { min: 168994, max: Infinity, rate: 0.45 }
+    ],
     2024: [ // Avis 2024 - barème 2024 (revenus 2023)
       { min: 0, max: 11294, rate: 0 },
       { min: 11294, max: 28797, rate: 0.11 },
@@ -45,6 +73,10 @@ const TaxEstimator = () => {
 
   // Déductions forfaitaires par année
   const deductionLimitsByYear = {
+    2020: { min: 440, max: 12652 },
+    2021: { min: 440, max: 12652 },
+    2022: { min: 449, max: 12829 },
+    2023: { min: 470, max: 13522 },
     2024: { min: 460, max: 13267 },
     2025: { min: 464, max: 13522 },
     2026: { min: 472, max: 13779 } // estimation
@@ -108,6 +140,10 @@ const TaxEstimator = () => {
     
     // Application de la décote automatique (paramètres officiels Bercy)
     const decoteData = {
+      2020: { seuil_celibataire: 1720, seuil_couple: 2840, base_celibataire: 777, base_couple: 1286, taux: 0.4523 },
+      2021: { seuil_celibataire: 1746, seuil_couple: 2888, base_celibataire: 790, base_couple: 1307, taux: 0.4523 },
+      2022: { seuil_celibataire: 1771, seuil_couple: 2936, base_celibataire: 801, base_couple: 1328, taux: 0.4523 },
+      2023: { seuil_celibataire: 1868, seuil_couple: 3095, base_celibataire: 845, base_couple: 1398, taux: 0.4523 },
       2024: { seuil_celibataire: 1841, seuil_couple: 3045, base_celibataire: 828, base_couple: 1368, taux: 0.4523 },
       2025: { seuil_celibataire: 1929, seuil_couple: 3186, base_celibataire: 873, base_couple: 1444, taux: 0.4523 },
       2026: { seuil_celibataire: 1964, seuil_couple: 3249, base_celibataire: 889, base_couple: 1470, taux: 0.4525 }
