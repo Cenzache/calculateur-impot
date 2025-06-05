@@ -7,7 +7,7 @@ import PolitiqueConfidentialite from './PolitiqueConfidentialite';
 
 const TaxEstimator = () => {
   const [currentView, setCurrentView] = useState('calculator'); // 'calculator', 'about', 'mentions', 'privacy'
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedYear, setSelectedYear] = useState(2020);
   const [salary, setSalary] = useState('');
   const [currentTax, setCurrentTax] = useState('');
   const [familySituation, setFamilySituation] = useState('single');
