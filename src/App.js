@@ -7,7 +7,7 @@ import PolitiqueConfidentialite from './PolitiqueConfidentialite';
 
 const TaxEstimator = () => {
   const [currentView, setCurrentView] = useState('calculator'); // 'calculator', 'about', 'mentions', 'privacy'
-  const [selectedYear, setSelectedYear] = useState(2020);
+  const [selectedYear, setSelectedYear] = useState(2026);
   const [salary, setSalary] = useState('');
   const [currentTax, setCurrentTax] = useState('');
   const [familySituation, setFamilySituation] = useState('single');
@@ -234,7 +234,47 @@ const TaxEstimator = () => {
             
             {/* Sélecteur d'année */}
             <div className="flex justify-center mb-4">
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 rounded-lg p-1 flex-wrap">
+                <button
+                  onClick={() => setSelectedYear(2020)}
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
+                    selectedYear === 2020 
+                      ? 'bg-black text-white' 
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  2020
+                </button>
+                <button
+                  onClick={() => setSelectedYear(2021)}
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
+                    selectedYear === 2021 
+                      ? 'bg-black text-white' 
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  2021
+                </button>
+                <button
+                  onClick={() => setSelectedYear(2022)}
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
+                    selectedYear === 2022 
+                      ? 'bg-black text-white' 
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  2022
+                </button>
+                <button
+                  onClick={() => setSelectedYear(2023)}
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
+                    selectedYear === 2023 
+                      ? 'bg-black text-white' 
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  2023
+                </button>
                 <button
                   onClick={() => setSelectedYear(2024)}
                   className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
@@ -243,7 +283,7 @@ const TaxEstimator = () => {
                       : 'text-gray-600 hover:text-black'
                   }`}
                 >
-                  Avis 2024
+                  2024
                 </button>
                 <button
                   onClick={() => setSelectedYear(2025)}
@@ -253,7 +293,7 @@ const TaxEstimator = () => {
                       : 'text-gray-600 hover:text-black'
                   }`}
                 >
-                  Avis 2025
+                  2025
                 </button>
                 <button
                   onClick={() => setSelectedYear(2026)}
@@ -263,15 +303,19 @@ const TaxEstimator = () => {
                       : 'text-gray-600 hover:text-black'
                   }`}
                 >
-                  Avis 2026
+                  2026
                 </button>
               </div>
             </div>
             
             <p className="text-center text-sm text-gray-500 mb-6">
-              {selectedYear === 2024 && "Revenus 2023 • Barème 2024"}
-              {selectedYear === 2025 && "Revenus 2024 • Barème 2025"}
-              {selectedYear === 2026 && "Revenus 2025 • Barème 2026 (projection)"}
+              {selectedYear === 2020 && "Avis 2020 sur revenus 2019 • Barème 2020"}
+              {selectedYear === 2021 && "Avis 2021 sur revenus 2020 • Barème 2021"}
+              {selectedYear === 2022 && "Avis 2022 sur revenus 2021 • Barème 2022"}
+              {selectedYear === 2023 && "Avis 2023 sur revenus 2022 • Barème 2023"}
+              {selectedYear === 2024 && "Avis 2024 sur revenus 2023 • Barème 2024"}
+              {selectedYear === 2025 && "Avis 2025 sur revenus 2024 • Barème 2025"}
+              {selectedYear === 2026 && "Avis 2026 sur revenus 2025 • Barème 2026 (projection)"}
             </p>
           </div>
 
@@ -465,7 +509,7 @@ const TaxEstimator = () => {
                   <div className="bg-blue-50 p-4 md:p-6 rounded-lg">
                     <h2 className="text-lg font-semibold mb-4 flex items-center">
                       <Calculator className="w-5 h-5 mr-2" />
-                      Estimation pour avis {selectedYear}
+                      Estimation pour année {selectedYear}
                     </h2>
                     
                     <div className="space-y-4">
