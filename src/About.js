@@ -173,25 +173,7 @@ const About = ({ onBack }) => {
                 Ce <strong>calculateur d'impôt en ligne</strong> a été développé avec l'assistance de Claude AI. Il utilise les <strong>barèmes fiscaux officiels 2025</strong> publiés par Bercy mais reste un <strong>outil d'estimation indicatif</strong>. Pour des calculs définitifs de votre <strong>déclaration de revenus</strong>, référez-vous toujours au <strong>simulateur officiel impots.gouv.fr</strong>.
               </p>
 
-              <div className="bg-gray-900 text-white p-8 rounded-lg">
-                <h3 className="text-xl font-semibold mb-4 text-green-400">
-                  🔒 Confidentialité garantie
-                </h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <ul className="space-y-2 text-gray-300 text-sm">
-                      <li>• <strong>Aucune donnée stockée</strong> : calculs locaux dans votre navigateur</li>
-                      <li>• <strong>Respect RGPD</strong> : aucune collecte d'informations personnelles</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <ul className="space-y-2 text-gray-300 text-sm">
-                      <li>• <strong>Gratuit sans pub intrusive</strong> : focus sur l'utilité</li>
-                      <li>• <strong>Open source</strong> : code transparent et vérifiable</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+
             </section>
 
             {/* Complémentarité */}
@@ -202,29 +184,37 @@ const About = ({ onBack }) => {
                 Ce <strong>simulateur d'impôt 2025</strong> complète sans remplacer :
               </p>
 
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div className="text-center p-6 border border-gray-200 rounded-lg">
                   <div className="text-2xl mb-3">🏛️</div>
                   <h3 className="font-semibold mb-2">Simulateur officiel</h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 mb-4">
                     <strong>impots.gouv.fr</strong> pour les calculs définitifs
                   </p>
+                  <a 
+                    href="https://www.impots.gouv.fr/simulateurs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                  >
+                    Accéder au simulateur →
+                  </a>
                 </div>
 
                 <div className="text-center p-6 border border-gray-200 rounded-lg">
                   <div className="text-2xl mb-3">💼</div>
                   <h3 className="font-semibold mb-2">Simulateur Urssaf</h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 mb-4">
                     Calculs <strong>net/brut</strong> et charges sociales
                   </p>
-                </div>
-
-                <div className="text-center p-6 border border-gray-200 rounded-lg">
-                  <div className="text-2xl mb-3">📋</div>
-                  <h3 className="font-semibold mb-2">Mon Service Public</h3>
-                  <p className="text-sm text-gray-600">
-                    Démarches <strong>administratives</strong> officielles
-                  </p>
+                  <a 
+                    href="https://mon-entreprise.urssaf.fr/simulateurs-et-assistants"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                  >
+                    Accéder au simulateur →
+                  </a>
                 </div>
               </div>
             </section>
